@@ -1,0 +1,40 @@
+{
+  "name": "icebreakerchatapp",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "start": "nodemon server.js",
+    "test": "mocha"
+  },
+  "author": "Quang-Thuy Hoang",
+  "license": "ISC",
+  "dependencies": {
+    "@types/express": "^4.16.0",
+    "@types/socket.io": "^1.4.36",
+    "chat-server": "0.0.3",
+    "express": "^4.16.3",
+    "https": "^1.0.0",
+    "mysql": "^2.16.0"
+  },
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "debug": "^3.1.0",
+    "dotenv": "^6.0.0",
+    "gulp": "^3.9.1",
+    "gulp-typescript": "^5.0.0-alpha.3",
+    "mocha": "^5.2.0",
+    "nodemon": "^1.18.3",
+    "socket.io": "^2.1.1",
+    "typescript": "^2.9.2"
+  },
+  "nodemonConfig": {
+    "restartable": "rs",
+    "ignore": [],
+    "delay": "1000",
+    "env": {
+      "NODE_ENV": "development",
+      "PORT": 3000
+    }
+  }
+}

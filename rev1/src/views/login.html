@@ -1,0 +1,92 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font: 13px Helvetica, Arial; }
+      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+      #messages { display: block; list-style-type: none; margin: 0; padding: 0; }
+      #messages li { padding: 5px 10px; }
+      #messages li:nth-child(odd) { background: #eee; }
+      #registration {display: none;}
+      #login { display: block;}
+    </style>
+  </head>
+  <body>
+      <ul id="messages"></ul>
+    <div id="login">
+      <form  action="/login" method="POST">
+        <input id="m" autocomplete="off" name="uuid" value="uuid"/>
+        <button>LOGIN</button>
+      </form>
+    </div>
+    <div id="registration" >
+      <!-- <form  action="" method=""> -->
+        <div class="field">
+          <label>USERNAME</label>
+          <input id="user" type="text" name="username" placeholder="">
+        </div>
+        <button onclick="registerUser()">REGISTER</button>
+      <!-- </form> -->
+    </div>
+    <script
+        src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha256-3edrmyuQ0w65f8gfBsqowzjJe2iM6n0nKciPUp8y+7E="
+        crossorigin="anonymous"></script>
+    <script>
+      var myStorage = window.localStorage;
+     
+      (function verifyLocalStorage() {
+        
+        var user = myStorage.getItem('_icebreaker_uuid');
+
+        if (user.length < 1) {
+          // $('#messages').append($('<li>').text('No UUID found in your browser. Please register.'));
+            $('#messages').hide();
+            $('#login').css("display", "none");
+            $('#registration').css("display", "block");
+        }
+    
+        if (user.length > 0) {
+         var currUser = JSON.parse(user)
+          if (currUser.uuid.length === 36) {
+            $('#m').val(user)
+          }
+        }
+      })(myStorage)
+      
+      function storeMyData(data) {
+        myStorage.setItem('_icebreaker_uuid', data); //local session storage
+      }
+
+      function registerUser(){
+        if (!$('#user').val() || $('#user').val().length < 1) {
+          alert("Need to enter username");
+          return;
+        }
+        console.log($('#user').val())
+        
+         fetch('/register',{
+            method: 'POST',
+            body: JSON.stringify({
+              username: $('#user').val()
+            }),
+            headers: {"Content-Type": "application/json"}
+          })
+          .then(function(response){
+            
+            return response.json()
+          }).then(function(body){
+            const res = JSON.stringify(body)
+            storeMyData(
+              JSON.stringify({username: body.username,uuid: body.uuid})
+            )
+            alert('user registered:', body.uuid)
+          });
+      }
+    </script>
+  </body>
+</html>
