@@ -1,4 +1,5 @@
-const app       = require('express')();
+const express       = require('express');
+const app       = express();
 const http      = require('http').Server(app);
 const io        = require('socket.io')(http);
 const db        = require('./src/app/database/index');
@@ -12,6 +13,7 @@ const url       = require('url');
 const debug     = require('debug')('server');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+app.use('/public', express.static(__dirname + '/src/public'));
 
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/src/views/index.html');
@@ -23,9 +25,7 @@ app.post('/register', (req, res) => {
     if(typeof req.body === 'string') {
         payload = JSON.parse(req.body);
     }
-    debug("payload: " +payload, typeof payload)
-
-    var user = new User({username: payload.username});
+      var user = new User({username: payload.username});
 
     user.generate_datetime();
     user.generate_uuid();
@@ -33,17 +33,13 @@ app.post('/register', (req, res) => {
     crud.addNewUser(user, function(results){
         res.send(JSON.stringify(user))
     })
-    // res.redirect(url.format({
-    //     pathname: '/saveCredential',
-    //     query: user
-    // }))
- 
 })
 
-app.get('/saveCredential', (req, res) => {
+app.get('/profile', (req, res) => {
     var payload = req.query;
     debug('payload -login ' + payload);
-    res.json(payload)
+
+    res.sendFile(__dirname + '/src/views/profile.html')
 })
 
 app.get('/login', (req, res) => {
@@ -51,38 +47,32 @@ app.get('/login', (req, res) => {
 })
 
 app.post('/login', (req, res) => {
-    var payload = req.body;
-    console.log(payload)
+    var payload = JSON.parse(req.body.user);
+    console.log(payload, payload.uuid, typeof payload)
     db.query('SELECT * FROM user WHERE uuid = "' + payload.uuid + '"',
         function(error, results, fields) {
             if (error) throw error;
-     
+            var queryResult = {
+                loginResult : true
+            }
             if (!results[0] || results[0].length < 1) {
-                return res.redirect(url.format({
-                    pathname: '/',
-                    query: {
-                        loginSuccess: false
-                    }
-                }))
+                queryResult = {
+                    loginResult : false
+                }
             }
 
             if (results[0]) {
-                console.log('i was here')
+                console.log('result', results)
+                queryResult.username =  results[0].username
                 if (results[0].uuid !== payload.uuid) {
-                    return res.redirect(url.format({
-                        pathname: '/',
-                        query: {
-                            loginSuccess: false
-                        }
-                    }));
+                    queryResult.loginResult = false;
                 }
             }
             // TODO: create token id to show successful login
-            res.redirect(url.format({
-                pathname: '/',
-                query: {
-                    loginSuccess: true
-                }
+         
+            res.redirect(302, url.format({
+                pathname: '/profile',
+                query: queryResult
             }))
     })
     

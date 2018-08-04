@@ -1,0 +1,5 @@
+/node_modules
+/rev1/node_modules
+/rev1/.env
+/rev1/test
+article.md
