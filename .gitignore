@@ -2,4 +2,7 @@
 /rev1/node_modules
 /rev1/.env
 /rev1/test
+/rev2/node_modules
+/rev2/.env
+/rev2/test
 article.md

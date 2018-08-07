@@ -24,32 +24,9 @@
         integrity="sha256-3edrmyuQ0w65f8gfBsqowzjJe2iM6n0nKciPUp8y+7E="
         crossorigin="anonymous"></script>
     
+    <script src="/app/client/app.message.js" type="text/javascript"></script>
     <script>
-      var myStorage = window.localStorage;
-        (function() {
-            var user = JSON.parse(getMyData('_icebreaker_uuid'));
-            var socket = io();
-            $('form').submit(function(){
-                socket.emit('chat message', JSON.stringify({ username: user.username, uuid: user.uuid, msg: $('#m').val()}));
-                $('#m').val('');
-                return false;
-            });
-
-            socket.on('chat message', function(msg) {
-                console.log(msg)
-                $('#messages').append($('<li>').text(user.username + " : " + msg.msg));
-            });
-
-            function storeMyData(data) {
-            myStorage.setItem('_icebreaker_uuid', data); //local session storage
-            }
-
-            function getMyData(key) {
-                return myStorage.getItem(key);
-            }
-        })(myStorage);
-
-        
+       
     </script>
   </body>
 </html>

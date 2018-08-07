@@ -41,7 +41,8 @@ MessageModel.prototype.generate_datetime = function(){
 };
 
 MessageModel.prototype.generate_id = function() {
-    return this.create_date + this.sender_id;
+    let id = this.create_date + this.sender_id.slice(0,8);
+    return Number(id);
 }
 
 // returns model values

@@ -6,6 +6,7 @@ const db        = require('./src/app/database/index');
 const User      = require('./src/app/chat/shared/model/user/index');
 const Message   = require('./src/app/chat/shared/model/message/index');
 const crud      = require('./src/app/database/crud');
+const chatRoutes = require('./src/app/chat/shared/services/message/index');
 
 const bodyParser = require('body-parser');
 const url       = require('url');
@@ -13,7 +14,9 @@ const url       = require('url');
 const debug     = require('debug')('server');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+app.use('/', express.static(__dirname + '/src'));
 app.use('/public', express.static(__dirname + '/src/public'));
+
 
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/src/views/index.html');
@@ -31,7 +34,7 @@ app.post('/register', (req, res) => {
     user.generate_uuid();
     user.is_active = true;
     crud.addNewUser(user, function(results){
-        res.send(JSON.stringify(user))
+        res.status(201).json(user)
     })
 })
 
@@ -78,6 +81,10 @@ app.post('/login', (req, res) => {
     
 })
 
+app.use('/chat', chatRoutes)
+//app.use('/games', gameRoutes);
+
+
 io.on('connection', (socket) => {
     socket.broadcast.emit('a user has connected');
     socket.on('disconnect', function() {
@@ -88,10 +95,10 @@ io.on('connection', (socket) => {
         var newMsg = new Message({
             subject: 'default subject',
             sender_id: message.uuid,
-            message_body: message.msg
+            message_body: message.message_body
         });
         newMsg.generate_datetime();
-
+        console.log("this is in default")
         // TODO: add query to get username
         io.emit('chat message', JSON.parse(msg))
         db.query(
@@ -105,7 +112,90 @@ io.on('connection', (socket) => {
         });
     })
 
+    socket.on('programming-153352671804811300', (msg) => {
+        let message = JSON.parse(msg);
+        var newMsg = new Message({
+            subject: message.subject,
+            sender_id: message.uuid,
+            message_body: message.message_body,
+            parent_message_id: message.parent_message_id
+        });
+        newMsg.generate_datetime();
+        console.log("this is in programmer", newMsg)
+        io.emit('programming-153352671804811300', JSON.parse(msg))
+    })
 });
+// const chatSocket = io.of('/chat');
+// chatSocket.on('connection', (socket) => {
+//     socket.join(topic + '-' + room_id);
+//     socket.broadcast.emit('someone connected to ' + topic + ' room_id: ' + room_id );
+//     console.log('someone connected to ' + topic + ' room_id: ' + room_id );
+//     socket.on('disconnect', function() {
+//         console.log('user has disconnected from chatroom');
+//     })
+//     socket.join(topic + '-' + room_id, (msg) => {
+//         let message = JSON.parse(msg);
+//         let newMessage = new Message({
+//             subject : topic,
+//             sender_id : message.uuid,
+//             message_body : message.message_body,
+//             message_parent_id : room_id
+//         })
+
+//         newMessage.generate_datetime();
+//         socket.emit(topic + '-' + room_id, newMessage)
+//         db.query(
+//             newMessage.insertQuery(),
+//             newMessage.getValues(),
+//             function (error, results, fields) {
+//             if (error) throw error;
+//             if (results) {
+//                 debug('message sent')
+//             }
+//         });
+//     })
+// })
+
+// chatSocketConnection(io, 'programming', '153352671804811300');
+function chatSocketConnection(io, topic, room_id) {
+    let room = topic + '-' + room_id;
+    const chatSocket = io.of('/chat');
+    
+    chatSocket.on('connection', (socket) => {
+        
+        socket.join(topic + '-' + room_id);
+        socket.broadcast.emit('someone connected to ' + topic + ' room_id: ' + room_id );
+        console.log('someone connected to ' + topic + ' room_id: ' + room_id );
+        socket.on('disconnect', function() {
+            console.log('user has disconnected from chatroom');
+        })
+        console.log("joined", topic, room_id)
+        socket.join(topic + '-' + room_id)
+        socket.on(room, (msg) => {
+            console.log("mesage", msg)
+            let message = JSON.parse(msg);
+            let newMessage = new Message({
+                subject : topic,
+                sender_id : message.uuid,
+                message_body : message.msg,
+                parent_message_id : room_id
+            })
+
+            newMessage.generate_datetime();
+            console.log("newMessage", newMessage)
+            chatSocket.emit(room, newMessage)
+            db.query(
+                newMessage.insertQuery(),
+                newMessage.getValues(),
+                function (error, results, fields) {
+                if (error) throw error;
+                if (results) {
+                    debug('message sent')
+                }
+            });
+        })
+    })
+}
 
 const port = process.env.PORT || 3000;
 http.listen(port, function() {
